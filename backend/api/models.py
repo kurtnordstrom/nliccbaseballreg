@@ -8,7 +8,8 @@ class Family(models.Model):
     dues_paid = models.BooleanField()
 
 class Person(models.Model):
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     email = models.CharField(max_length=256)
     date_of_birth = models.DateField()
     address = models.CharField(max_length=256)
@@ -28,4 +29,3 @@ class Player(models.Model):
     franchise_second = models.CharField(max_length=32)
     season = models.CharField(max_length=4)
     returning = models.BooleanField()
-    
