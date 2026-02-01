@@ -6,6 +6,7 @@ class Family(models.Model):
     family_name = models.CharField(max_length=100)
     dues = models.BigIntegerField(default=0.0)
     dues_paid = models.BooleanField(default=False)
+    payment_option = models.CharField(max_length=36, blank=True)
     registration_submitted = models.BooleanField(default=False)
 
 class Person(models.Model):
@@ -14,7 +15,7 @@ class Person(models.Model):
     email = models.CharField(max_length=256, blank=True)
     date_of_birth = models.DateField()
     address = models.CharField(max_length=256, blank=True)
-    family = models.ForeignKey(Family, on_delete=models.DO_NOTHING)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     notes = models.TextField(blank=True)
     is_user = models.BooleanField(default=False)

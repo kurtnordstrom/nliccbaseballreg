@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from .serializers import UserSerializer, PersonSerializer, FamilySerializer, RoleSerializer, PlayerSerializer
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -16,8 +17,12 @@ class PersonListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        person = Person.objects.get(user=user)
-        family = person.family
+        family = None
+        try:
+            person = Person.objects.get(user__id=user.id)
+            family = person.family
+        except ObjectDoesNotExist:
+            family = None
         return Person.objects.filter(family=family)
     
     def perform_create(self, serializer):
@@ -35,6 +40,10 @@ class PersonListCreateView(generics.ListCreateAPIView):
             serializer.save(user=user)
         else:
             print(serializer.errors)
+
+class PersonDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Person.objects.all()
+    serializer_class = PersonSerializer
 
 class FamilyCreateView(generics.CreateAPIView):
     queryset = Family.objects.all()
