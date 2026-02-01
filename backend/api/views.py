@@ -33,10 +33,7 @@ class PersonListCreateView(generics.ListCreateAPIView):
             data = serializer.validated_data
             print(data)
             if data.get("is_user"):
-                print("Person is a user")
                 user = self.request.user
-            else:
-                print("Person is not a user")
             serializer.save(user=user)
         else:
             print(serializer.errors)
@@ -59,6 +56,10 @@ class PlayerCreateView(generics.CreateAPIView):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
     permission_classes = [IsAuthenticated]
+
+class PlayerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
 
 
             

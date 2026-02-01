@@ -67,4 +67,4 @@ class RoleSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = [ "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", "season", "returning" ]
+        fields = [ "id", "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", "season", "returning" ]
