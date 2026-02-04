@@ -8,8 +8,9 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("person/", views.PersonListCreateView.as_view(), name="person"),
     path("person/<int:pk>/", views.PersonDetailView.as_view(), name="person_detail"),
-    path("family/", views.FamilyCreateView.as_view(), name="family"),
-    path("role/", views.RoleCreateView.as_view(), name="role"),
-    path("player/", views.PlayerCreateView.as_view(), name="player"),
+    path("family/", views.FamilyListCreateView.as_view(), name="family"),
+    path("role/", views.RoleListCreateView.as_view(), name="role"),
+    path("role/<int:pk>/", views.RoleDetailView.as_view(), name="role_detail"),
+    path("player/", views.PlayerListCreateView.as_view(), name="player"),
     path("player/<int:pk>/", views.PlayerDetailView.as_view(), name="player_detail"),
 ]

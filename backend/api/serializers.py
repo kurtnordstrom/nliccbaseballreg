@@ -62,7 +62,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = [ "name", "season", "person" ]
+        fields = [ "id", "name", "season", "person" ]
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:

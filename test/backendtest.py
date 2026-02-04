@@ -2,13 +2,24 @@ import requests
 
 base_url = "http://127.0.0.1:8000"
 username = "kurt"
-password = "hotdog"
+password = "kurtpass"
 
 def print_response(resp, desc=None):
     if not desc:
         print("%s %s" % (resp, resp.text))
     else:
         print("(%s) %s %s" % (desc, resp, resp.text))
+
+def get_item_and_print_response(endpoint, id, desc, headers=None):
+    endpoint = "%s/%s/%i/" % (base_url, endpoint, id)
+    get_resp = requests.get(endpoint, headers=headers)
+    print_response(get_resp, desc)
+
+def get_list_and_print_response(endpoint, desc, headers=None, query=None):
+    endpoint = "%s/%s/" % (base_url, endpoint)
+    get_resp = requests.get(endpoint, headers=headers, params=query)
+    print_response(get_resp, desc)
+
 
 if __name__ == "__main__":
 
@@ -100,44 +111,6 @@ if __name__ == "__main__":
 
     family_id = person_query_response.json()[0]["family"]
 
- 
-    """
-    #Attempt to use the token to create a new family
-
-    family_response = requests.post("%s/api/family/" % base_url, json=family_json, headers=request_headers)
-
-    print_response(family_response)
-
-    family_id = family_response.json()["id"]
-
-    person_id = family_response.json()["user"]["id"]
-    """
-
-    """
-    #Create the initial person
-
-    self_person_json = {
-        "first_name" : "Kurt",
-        "last_name" : "Nordstrom",
-        "email" : "kurt.e.nordstrom@gmail.com",
-        "date_of_birth" : "1977-09-30",
-        "address" : "Somewheresville",
-        "family" : family_id,        
-        "is_user" : True,
-    }
-
-    self_person_response = requests.post("%s/api/person/" % base_url, json=self_person_json, headers=request_headers)
-
-    print_response(self_person_response)
-
-
-    person_id = self_person_response.json()["id"]
-
-    person_query_response = requests.get("%s/api/person/" % base_url, headers=request_headers)
-
-    print_response(person_query_response)
-    """
-
     self_role_json = {
         "name" : "Head Coach",
         "person" : person_id,
@@ -178,6 +151,12 @@ if __name__ == "__main__":
 
     print_response(np_role_response)
 
+    get_list_and_print_response("api/role", "Get all roles", headers=request_headers)
+
+    get_list_and_print_response("api/role", "Get person specific roles", headers=request_headers, query={"person": person_id})
+
+
+
     #Create a player person
 
     player_person_json = {
@@ -209,12 +188,7 @@ if __name__ == "__main__":
 
     player_player_id = player_player_response.json()["id"]
 
-    def get_and_print_response(endpoint, id, desc):
-        endpoint = "%s/%s/%i/" % (base_url, endpoint, id)
-        get_resp = requests.get(endpoint, headers=request_headers)
-        print_response(get_resp, desc)
-
-    get_and_print_response("api/person", player_person_id, "Get player person")
+    get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
 
     player_person_update_json = {
         "first_name" : "Jimothy",
@@ -228,15 +202,15 @@ if __name__ == "__main__":
 
     print_response(player_person_put_response, "Player person put response")
 
-    get_and_print_response("api/person", player_person_id, "Get player person")
+    get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
 
     player_person_delete_response = requests.delete("%s/api/person/%i/" % (base_url, player_person_id), headers=request_headers)
 
     print_response(player_person_delete_response, "player person delete")
 
-    get_and_print_response("api/person", player_person_id, "Get player person")
+    get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
 
-    get_and_print_response("api/player", player_player_id, "Get player player")
+    get_item_and_print_response("api/player", player_player_id, "Get player player", headers=request_headers)
 
     #Add the player information to them
 

@@ -41,25 +41,48 @@ class PersonListCreateView(generics.ListCreateAPIView):
 class PersonDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Person.objects.all()
     serializer_class = PersonSerializer
+    permission_classes = [IsAuthenticated]
 
-class FamilyCreateView(generics.CreateAPIView):
+class FamilyListCreateView(generics.ListCreateAPIView):
     queryset = Family.objects.all()
     serializer_class = FamilySerializer
     permission_classes = [IsAuthenticated]
 
-class RoleCreateView(generics.CreateAPIView):
+
+class RoleListCreateView(generics.ListCreateAPIView):
+    #queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self): 
+        queryset = Role.objects.all()
+        person_id = self.request.query_params.get('person')
+        if person_id is not None:
+            queryset = queryset.filter(person=person_id)
+        return queryset
+    
+class RoleDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     permission_classes = [IsAuthenticated]
 
-class PlayerCreateView(generics.CreateAPIView):
-    queryset = Player.objects.all()
+class PlayerListCreateView(generics.ListCreateAPIView):
+    #queryset = Player.objects.all()
     serializer_class = PlayerSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Player.objects.all()
+        person_id = self.request.query_params.get('person')
+        if person_id is not None:
+            queryset = queryset.filter(person=person_id)
+        return queryset
+
 
 class PlayerDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
+    permission_classes = [IsAuthenticated]
 
 
             
