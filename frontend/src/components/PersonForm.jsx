@@ -2,7 +2,7 @@ import {useState, useEffect} from "react"
 import api from "../api"
 
 
-function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
+function PersonForm({method, person_id, is_player}) { //method is either 'create' or 'edit'
     const [personObject, setPersonObject] = useState({})
     const [playerObject, setPlayerObject] = useState({})
     const [familyId, setFamilyId] = useState("");
@@ -13,6 +13,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
    
     
     const getPersonData = (person_id_value) => {
+        console.log("Getting person data...")
         api.get(`/api/person/${person_id_value}/`)
             .then((res) => res.data)
             .then((data) => {
@@ -31,15 +32,17 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 setRoleList(roleNameList)
             })
             .catch((err) => alert(err));
-        api.get(`/api/player/?person=${person_id_value}`)
-            .then((player_res) => player_res.data)
-            .then((player_data) => {
-                if(player_data?.length > 0) {
-                    const player = player_data[0]
-                    setPlayerObject(player)
-                    console.dir(player)
-                }
-            })
+        if (is_player) {
+            api.get(`/api/player/?person=${person_id_value}`)
+                .then((player_res) => player_res.data)
+                .then((player_data) => {
+                    if(player_data?.length > 0) {
+                        const player = player_data[0]
+                        setPlayerObject(player)
+                        console.dir(player)
+                    }
+                })
+        }
     }
     
     const setFamily =  () => {
@@ -71,8 +74,17 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         const { name, value } = e.target;
         setPersonObject({
             ...personObject,
-            [name]: value
+            [name]: value   
         });
+    }
+
+    const handlePlayerChange = (e) => {
+        const { name, value } = e.target;
+        console.log(`handlePlayerChange, name=${name}, value=${value}`)
+        setPlayerObject({
+            ...playerObject,
+            [name]: value
+        })
     }
 
     const handleSubmit = async (e) => {
@@ -90,11 +102,15 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     }
                     await api.post("/api/role/", roleOb)
                 }
+                if (is_player) {
+                    const playerSubmit = {...playerObject, person: person_res_id, season: "2026"}
+                    await api.post("/api/player/", playerSubmit)
+                }
             } catch(error) {
                 alert(error)
             }
                
-        } else { 
+        } else { //it's an edit
             try {
                 const person_res = await api.put(`/api/person/${person_id}/`, personObject)
                 const role_res = await api.get(`/api/role/?person=${person_id}`)
@@ -126,7 +142,9 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 for(const entry of deleteRoleIdList) {
                     await api.delete(`/api/role/${entry}/`)                        
                 }
-                
+                if (is_player) {
+                    await api.put(`/api/player/${playerObject.id}/`, playerObject)
+                }
             } catch(error) {
                 alert(error)
             }
@@ -185,6 +203,66 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="address"
                 onChange={handlePersonChange}
             />
+            { is_player &&
+            <>
+            <label>Franchise (First Choice)</label>
+            <select
+                name="franchise_first"
+                value={playerObject.franchise_first}
+                onChange={handlePlayerChange}>
+                <option value="BLUE">Blue</option>
+                <option value="FOREST">Forest</option>
+                <option value="MAROON">Maroon</option>
+                <option value="NAVY">Navy</option>
+            </select>
+            <label>Franchise (Second Choice)</label>
+            <select
+                name="franchise_second"
+                value={playerObject.franchise_second}
+                onChange={handlePlayerChange}>
+                <option value="BLUE">Blue</option>
+                <option value="FOREST">Forest</option>
+                <option value="MAROON">Maroon</option>
+                <option value="NAVY">Navy</option>
+            </select>
+            <label>Incompatible Franchise</label>
+            <select
+                name="franchise_no"
+                value={playerObject.franchise_no}
+                onChange={handlePlayerChange}>
+                <option value="">(None)</option>
+                <option value="BLUE">Blue</option>
+                <option value="FOREST">Forest</option>
+                <option value="MAROON">Maroon</option>
+                <option value="NAVY">Navy</option>
+            </select>
+            <label>Shirt Size</label>
+            <select
+                name="shirt_size"
+                value={playerObject.shirt_size}
+                onChange={handlePlayerChange}>
+                <option value="Youth Small">Youth Small</option>
+                <option value="Youth Medium">Youth Medium</option>
+                <option value="Youth Large">Youth Large</option>
+                <option value="Adult Small">Adult Small</option>
+                <option value="Adult Medium">Adult Medium</option>
+            </select>
+            <label>Returning Player?</label>
+            <input 
+                type="checkbox" 
+                name="returning" 
+                checked={playerObject.returning} 
+                onChange={(e) => { 
+                    const val = e.target.checked;
+                    handlePlayerChange({
+                        target: {name: "returning", value: val}
+                    })
+                    }
+                }
+            />
+            </>
+            }
+            <label>Service Roles</label>
             <select 
                 name="personRoles"
                 multiple={true}

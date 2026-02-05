@@ -27,7 +27,7 @@ class Role(models.Model):
 
 class Player(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    shirt_size = models.CharField(max_length=10)
+    shirt_size = models.CharField(max_length=32)
     franchise_first = models.CharField(max_length=32)
     franchise_second = models.CharField(max_length=32)
     franchise_no = models.CharField(max_length=32, null=True, blank=True)

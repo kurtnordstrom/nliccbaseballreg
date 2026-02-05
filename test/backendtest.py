@@ -204,13 +204,13 @@ if __name__ == "__main__":
 
     get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
 
-    player_person_delete_response = requests.delete("%s/api/person/%i/" % (base_url, player_person_id), headers=request_headers)
+    #player_person_delete_response = requests.delete("%s/api/person/%i/" % (base_url, player_person_id), headers=request_headers)
 
-    print_response(player_person_delete_response, "player person delete")
+    #print_response(player_person_delete_response, "player person delete")
 
-    get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
+    #get_item_and_print_response("api/person", player_person_id, "Get player person", headers=request_headers)
 
-    get_item_and_print_response("api/player", player_player_id, "Get player player", headers=request_headers)
+    #get_item_and_print_response("api/player", player_player_id, "Get player player", headers=request_headers)
 
     #Add the player information to them
 
