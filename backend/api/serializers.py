@@ -8,7 +8,8 @@ class PersonSerializer(serializers.ModelSerializer):
     #user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username', required=False)
     class Meta:
         model = Person
-        fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address", "is_user", "family", "notes"]
+        fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address",\
+                  "is_user", "family", "notes", "phone_primary", "phone_secondary", "medical_experience"]
         #extra_kwargs = {
         #    "user" : { "read_only":True},
         #    "family" : { "read_only" : True }
@@ -67,4 +68,4 @@ class RoleSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = [ "id", "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", "season", "returning" ]
+        fields = [ "id", "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", "season", "returning", "can_pitch", "can_catch" ]
