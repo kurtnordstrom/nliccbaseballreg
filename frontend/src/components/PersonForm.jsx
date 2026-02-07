@@ -201,6 +201,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     const playerSubmit = {...playerObject, person: person_res_id, season: "2026"}
                     await api.post("/api/player/", playerSubmit)
                 }
+                navigate("/")
             } catch(error) {
                 alert(error)
             }
@@ -248,6 +249,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 alert(error)
             }
         }
+        
     }
 
     const handleRoleChange = (e) => {

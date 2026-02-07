@@ -49,6 +49,11 @@ class FamilyListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class FamilyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Family.objects.all()
+    serializer_class = FamilySerializer
+    permission_classes = [IsAuthenticated]
+
 class RoleListCreateView(generics.ListCreateAPIView):
     #queryset = Role.objects.all()
     serializer_class = RoleSerializer
