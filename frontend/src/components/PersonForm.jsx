@@ -163,6 +163,9 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                  (playerObject.franchise_first == playerObject.franchise_no || playerObject.franchise_second == playerObject.franchise_no)) {
                     errors.push("If an incompatible franchise is selected, it cannot be the same as the first or second choice for franchises")
             }
+            if(!playerObject.shirt_size) {
+                errors.push("Please make sure you select a shirt size")
+            }
             const legalRoles = [ "CONCESSIONS", "SCOREKEEPER" ]
             for(const role of roleList) {
                 if(!legalRoles.includes(role)) {
@@ -400,6 +403,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="shirt_size"
                 value={playerObject.shirt_size}
                 onChange={handlePlayerChange}>
+                <option value="">Please select a size</option>
                 <option value="Youth Small">Youth Small</option>
                 <option value="Youth Medium">Youth Medium</option>
                 <option value="Youth Large">Youth Large</option>
@@ -451,7 +455,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
             <button
                 className="form-button"
                 type="submit">
-                    Submit
+                    Save Changes
             </button>
             <button
                 type="button"
@@ -478,7 +482,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
 }
 
 function ErrorRow({errorString}) {
-    return (<div>{errorString}</div>)
+    return (<div class="item-display"><div class="item-text">{errorString}</div></div>)
 }
 
 export default PersonForm

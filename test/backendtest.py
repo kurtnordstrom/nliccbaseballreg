@@ -142,7 +142,7 @@ if __name__ == "__main__":
     #Add a role to them
 
     np_role_json = {
-        "name" : "Concessions",
+        "name" : "CONCESSIONS",
         "person" : np_person_id,
         "season" : "2026"
     }

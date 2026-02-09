@@ -3,6 +3,7 @@ import api from "../api"
 import Note from "../components/Note"
 import Person from "../components/Person"
 import {useNavigate} from "react-router-dom"
+import { getAgeNow } from "../util"
 
 function Home() {
     const [personObjects, setPersonObjects] = useState([]);
@@ -42,6 +43,23 @@ function Home() {
         return masterList
     }
 
+    const handleFamilyChange = (e) => {
+        const { name, value } = e.target;
+        setFamilyObject({
+            ...familyObject,
+            [name]: value
+        })
+    }
+
+    const handleFamilySave = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/api/family/${familyObject.id}/`, familyObject)
+        } catch(error) {
+            alert(error)
+        }
+    }
+
     const processRegistration = async () => {
         const masterList = await makeMasterList()
         console.dir(masterList)
@@ -56,12 +74,28 @@ function Home() {
             if(person.player) {
                 playerList.push(personName)
             }
-            for(const role of person.roles) {
-                roleCount++
-                if(!(role.name in roleObject)) {
-                    roleObject[role.name] = []
+            if (person.roles) {
+                for(const role of person.roles) {
+                    roleCount++
+                    if(!(role.name in roleObject)) {
+                        roleObject[role.name] = []
+                    }
+                    roleObject[role.name].push(personName)
                 }
-                roleObject[role.name].push(personName)
+            }
+            if(person.is_user) {                
+                if(getAgeNow(new Date(person.date_of_birth)) < 18) {
+                    errorList.push({text:"Primary registrant must be over 18 years of age"})
+                }
+                if(!person.email) {
+                    errorList.push({text:"Email address required for primary registrant"})
+                }
+                if(!person.phone_primary) {
+                    errorList.push({text:"A phone number is required for the primary registrant"})
+                }
+                if(!person.address) {
+                    errorList.push({text:"A physical address is required for the primary registrant"})
+                }            
             }
         }
         const playerCount = playerList.length
@@ -86,7 +120,7 @@ function Home() {
             for(const name of roleObject["GENERAL_MANAGER"]) {
                 warningList.push({
                     text: `You have ${name} signed up to be a franchise General Manager. `+
-                    "The GMs are chosen by the NLB leaderhip and are determined ahead of "+
+                    "The GMs are chosen by the NLB leadership and are determined ahead of "+
                     "registration. If you are not already assigned to be a GM, you should "+
                     "not select this role."
                 })
@@ -155,17 +189,13 @@ function Home() {
                 text: "You have the following player(s) to register:" +
                 playerList.join(", ")
             })
-        }
-
-        if(playerCount > 0) {
+   
             warningList.push({
                 text: "We will do our best to honor preferences for practices days/franchises, " +
                 "but we cannot make guarantees, due to limited space. You will be notified of "+
                 "placement once registration is closed and the rosters are completed."
             })
-        }
 
-        if(playerCount > 0) {
             warningList.push({
                 text: `Your total fees are `+
                 (totalFees).toLocaleString('en-US', {
@@ -173,7 +203,15 @@ function Home() {
                     currency: 'USD',
                 })
             })
+
+            if (familyObject.payment_option === "financial_aid") {
+                warningList.push({
+                    text: "You have requested financial assistance for registration. Please contact the NLB Financial Officer to discuss details."
+                })
+            }
         }
+
+    
 
         setSubmissionWarnings(warningList)
         setShowWarningModal(true)
@@ -181,7 +219,38 @@ function Home() {
 
     }
 
-    const checkPersonList = () => {
+    const getDuesFromMasterList = (masterList) => {
+        let playerCount = 0
+        for (const person of masterList) {
+            if (person.player) {
+                playerCount++
+            }
+        }
+        const dues = (playerCount * 75.0) < 225.0 ? (playerCount * 75.0) : 225.0
+        return dues
+    }
+
+    const doFinalSubmission = async () => {
+        const masterList = await makeMasterList()
+        const reg_date = new Date().toISOString()
+        const dues = getDuesFromMasterList(masterList)
+        const putData = {
+            ...familyObject,
+            dues : dues,
+            registration_date : reg_date,
+            registration_submitted : true
+        }
+        try {
+            await api.put(`/api/family/${familyObject.id}/`, putData)
+            setFamilyObject(putData)
+        } catch(error) {
+            alert(error)
+        }
+        setSubmissionWarnings([])
+        setShowWarningModal(false)
+    }
+
+    const getPersonsAndFamilyData = () => {
         api.get("/api/person/")
             .then((res) => res.data)
             .then((data) => {
@@ -199,45 +268,75 @@ function Home() {
     }
 
     useEffect(() => {
-        checkPersonList();
+        getPersonsAndFamilyData();
     }, [])
 
-    const familyName = `${familyObject.family_name} Family`
+    const familyName = `${familyObject.family_name} Family Registration`
     
     return (
     <div>
-        <div>
+        <div class="standard-block">
             <h2>{familyName}</h2>
             {personObjects.map((person) => (
                 <Person person={person}/>
             ))}
-        </div>
-        <div>
-        <button
-            type="button"
-            onClick={(e) => {navigate(`/person?method=create`)}}
-            >
-            Add Family Member
-        </button>
-        </div>
-        <div>
-        <button
-            type="button"
-            onClick={processRegistration}
-            >Submit Family Registration</button>
-        </div>
-        <div>
+            <div>
             <button
                 type="button"
-                onClick={() => {navigate("/logout")}}
-            >Logout</button>
+                onClick={(e) => {navigate(`/person?method=create`)}}
+                >
+                Add Family Member
+            </button>
+            </div>
+        </div>
+        <form
+            onSubmit={handleFamilySave}
+            className="form-container">
+            <h3>Family Information</h3>
+            <label>Notes</label>
+            <input
+                className="form-input"
+                type="textField"
+                value={familyObject.notes}
+                name="notes"
+                onChange={handleFamilyChange}
+            />
+            <label>Payment Preference</label>
+            <select
+                name="payment_option"
+                value={familyObject.payment_option}
+                onChange={handleFamilyChange}>
+                <option value="full">Pay in Full</option>
+                <option value="installments">Pay in 3 Installments</option>
+                <option value="financial_aid">Request Financial Assistance</option>
+            </select>
+            <button
+                type="button"
+                onClick={handleFamilySave}
+            >Save Family Information</button>
+        </form>
+        <div class="standard-block">
+            <div>
+            <button
+                type="button"
+                onClick={processRegistration}
+                >Submit Family Registration</button>
+            </div>
+            <div>
+                <button
+                    type="button"
+                    onClick={() => {navigate("/logout")}}
+                >Logout</button>
+            </div>
         </div>
         { showErrorModal && (
             <div className="modal-overlay">
                 <div className="modal-content">
+                    <h3>There are errors in your registration</h3>
                     {submissionErrors.map((item) => (
                         <Item item={item}/>
                     ))}
+                    <h3>Please correct these and re-submit the registration</h3>
                      <div>
                     <button
                         type="button"
@@ -253,6 +352,7 @@ function Home() {
         { showWarningModal && (
             <div className="modal-overlay">
                 <div className="modal-content">
+                    <h3>Please review before submitting registration</h3>
                     {submissionWarnings.map((item) => (
                         <Item item={item}/>
                     ))}
@@ -263,16 +363,26 @@ function Home() {
                                 setSubmissionWarnings([])
                                 setShowWarningModal(false)
                             }}
-                        >Edit Submission</button>
+                        >Cancel and Re-edit</button>
                     </div>
                     <div>
                         <button
                             type="button"
-                            onClick={() => {
-                                setSubmissionWarnings([])
-                                setShowWarningModal(false)
-                            }}
-                        >Submit Registration</button>
+                            onClick={doFinalSubmission}
+                        >Yes, Submit Registration</button>
+                    </div>
+                </div>
+            </div>
+        )}
+        { familyObject.registration_submitted && (
+            <div className="modal-overlay">
+                <div className="modal-content">
+                    <h3>Registration was submitted on {familyObject.registration_date}</h3>
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => {navigate("/logout")}}
+                        >Logout</button>
                     </div>
                 </div>
             </div>
@@ -284,9 +394,9 @@ function Home() {
 
 function Item({item}) {
     return (
-        <div>
-            <div>{item.text}</div>
-            {item.links?.map((link) => (<div>{link}</div>))}
+        <div class="item-display">
+            <div class="item-text">{item.text}</div>
+            {item.links?.map((link) => (<div class="item-link">{link}</div>))}
         </div>
     )
 }

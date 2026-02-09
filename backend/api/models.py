@@ -5,10 +5,10 @@ from django.contrib.auth.models import User
 class Family(models.Model):
     family_name = models.CharField(max_length=100)
     dues = models.BigIntegerField(default=0.0)
-    dues_paid = models.BooleanField(default=False)
     payment_option = models.CharField(max_length=36, blank=True)
     registration_submitted = models.BooleanField(default=False)
-    registration_date = models.DateField(blank=True, null=True)
+    registration_date = models.DateTimeField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
 class Person(models.Model):
     first_name = models.CharField(max_length=100)
@@ -20,7 +20,6 @@ class Person(models.Model):
     address = models.CharField(max_length=256, blank=True)
     family = models.ForeignKey(Family, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    notes = models.TextField(blank=True)
     is_user = models.BooleanField(default=False)
     medical_experience = models.CharField(max_length=64, blank=True)
 

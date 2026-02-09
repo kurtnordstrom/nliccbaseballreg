@@ -1,9 +1,38 @@
+.standard-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 50px auto; 
+  max-width: 400px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.standard-block button {
+  padding: 5px;
+  margin: 5px;
+}
+
+.person-list-item {
+  width: 90%;
+  border: 1px solid #4b4a4a;
+}
+
+.person-list-item span {
+  padding: 10px;
+}
+
+.person-list-item button {
+  padding: 10px;
+}
+
 .form-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 50px auto;
+  margin: 50px auto; 
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -22,7 +51,7 @@
 .form-button {
   width: 95%;
   padding: 10px;
-  margin: 20px 0;
+  margin: 10px 0;
   background-color: #007bff;
   color: white;
   border: none;
@@ -58,4 +87,16 @@
   max-width: 800px;
   width: 90%; /* Responsive on mobile */
   text-align: center;
+}
+
+.item-display {
+  padding: 10px;
+}
+
+.item-text {
+
+}
+
+.item-link {
+
 }
