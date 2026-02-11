@@ -148,12 +148,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-#CORS_ALLOW_ALL_ORIGINS = True
-
-CORS_ALLOWED_ORIGINS = [
-        "http://localhost:5173",
-        "http://localhost:4173",
-        "https://northstream.freeddns.org:7777"
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWS_CREDENTIALS = True
