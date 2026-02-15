@@ -64,15 +64,6 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         
     }
 
-    const handleRoleConfirm = (role, confirmText, confirmLink) => {
-        const confirmOb = {
-            text: confirmText,
-            link: confirmLink
-        }
-        setConfirmData(confirmOb)
-        setShowConfirmModal(true)
-        setConfirmRole(role)
-    }
     
     const getAndSetFamily =  () => {
         api.get("/api/person/")
@@ -396,21 +387,80 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 multiple={true}
                 value={roleList}
                 onChange={handleRoleChange}>
-                <option value="GENERAL_MANAGER">General Manager</option>
-                <option value="HEAD_COACH">Head Coach</option>
+                <option value="GENERAL_MANAGER"
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and agree with the " +
+                                "coaching guidelines, linked below",
+                            link: EXTERNAL_LINK_URLS.coaching
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("GENERAL_MANAGER")
+                    }}>General Manager</option>
+                <option 
+                    value="HEAD_COACH"
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and agree with the " +
+                                "coaching guidelines, linked below",
+                            link: EXTERNAL_LINK_URLS.coaching
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("HEAD_COACH")
+                    }}
+                >Head Coach</option>
                 <option 
                     value="ASSISTANT_COACH"
-                    //TODO: Fix bug
-                    onClick={handleRoleConfirm(
-                        "ASSISTANT_COACH",
-                       "Please confirm that you have reviewed and agree to the coaching guidelines before selecting" +
-                                " this role", 
-                        EXTERNAL_LINK_URLS.coaching,
-                    )}
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and agree with the " +
+                                "coaching guidelines, linked below",
+                            link: EXTERNAL_LINK_URLS.coaching
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("ASSISTANT_COACH")
+                    }}
                 >Assistant Coach</option>
-                <option value="SCOREKEEPER">Scorekeeper</option>
-                <option value="CONCESSIONS">Concessions</option>
-                <option value="UMPIRE">Umpire</option>
+                <option 
+                    value="SCOREKEEPER"
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and understand the " +
+                                "rule for scorekeeping, linked below",
+                            link: EXTERNAL_LINK_URLS.scorekeeping
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("SCOREKEEPER")
+                    }}>Scorekeeper</option>
+                <option 
+                    value="CONCESSIONS"
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and understand the " +
+                                "guidelines for concessions work, linked below",
+                            link: EXTERNAL_LINK_URLS.concessions
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("CONCESSIONS")
+                    }}
+                    >Concessions</option>
+                <option 
+                    value="UMPIRE"
+                    onClick={ () => {
+                        const confirmOb = {
+                            text: "Please confirm that you have read and understand the " +
+                                "rules and guidelines for umpires, linked below",
+                            link: EXTERNAL_LINK_URLS.umpire_rules
+                        }
+                        setConfirmData(confirmOb)
+                        setShowConfirmModal(true)
+                        setConfirmRole("UMPIRE")
+                    }}>Umpire</option>
             </select>
             <button
                 type="button"
