@@ -2,7 +2,7 @@ import {useState, useEffect} from "react"
 import api from "../api"
 import {useNavigate} from "react-router-dom"
 import { getAgeAtDate, getAgeNow, checkDateString } from "../util"
-import { SEASON_START_DATE } from "../constants"
+import { SEASON_START_DATE, EXTERNAL_LINK_URLS } from "../constants"
 
 
 function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
@@ -13,6 +13,14 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
     const [isPlayer, setIsPlayer] = useState(false)
     const [showValidateModal, setShowValidateModal] = useState(false)
     const [validateErrors, setValidateErrors] = useState([])
+    const [showInfoModal, setShowInfoModal] = useState(false)
+    const [infoItems, setInfoItems] = useState([])
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [confirmRole, setConfirmRole] = useState("")
+    const [confirmData, setConfirmData] = useState({})
+
+    const baseUrl = import.meta.env.VITE_STATIC_FILE_URL;
+
     const navigate = useNavigate()
 
 
@@ -54,6 +62,16 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 console.log(`Error getting player data: ${err}`)
             })
         
+    }
+
+    const handleRoleConfirm = (role, confirmText, confirmLink) => {
+        const confirmOb = {
+            text: confirmText,
+            link: confirmLink
+        }
+        setConfirmData(confirmOb)
+        setShowConfirmModal(true)
+        setConfirmRole(role)
     }
     
     const getAndSetFamily =  () => {
@@ -152,8 +170,12 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         }
 
         if (isPlayer) {
-            if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) > 13) {
-                errors.push(`Players cannot be older than 13 at the beginning of the season (${SEASON_START_DATE})`)
+            if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) > 13 &&
+                !playerObject.age_exemption_request) {
+                errors.push(`Players cannot be older than 13 at the beginning of the season (${SEASON_START_DATE}). ` +
+                    "If you would like to request an age exemption, please check the box for it, and list any relevant " +
+                    "information in the notes field on the Family Information form"
+                )
             }
             if( (playerObject.franchise_first && playerObject.franchise_second) && 
                 (playerObject.franchise_first === playerObject.franchise_second)) {
@@ -211,7 +233,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                
         } else { //it's an edit
             try {
-                const person_res = await api.put(`/api/person/${person_id}/`, personObject)
+                await api.put(`/api/person/${person_id}/`, personObject)
                 const role_res = await api.get(`/api/role/?person=${person_id}`)
                 const existingRoleObjects = []
                 for(const role of role_res.data) {
@@ -326,6 +348,36 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="phone_secondary"
                 onChange={handlePersonChange}
             />
+            <label>Person is parent/guardian of player(s)
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="is_parent" 
+                    checked={personObject.is_parent} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePersonChange({
+                            target: {name: "is_parent", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
+            <label>Can pickup player(s) from practice/games
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="can_pickup" 
+                    checked={personObject.can_pickup} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePersonChange({
+                            target: {name: "can_pickup", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
             <label>Medical Training</label>
             <select
                 name="medical_experience"
@@ -346,7 +398,16 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 onChange={handleRoleChange}>
                 <option value="GENERAL_MANAGER">General Manager</option>
                 <option value="HEAD_COACH">Head Coach</option>
-                <option value="ASSISTANT_COACH">Assistant Coach</option>
+                <option 
+                    value="ASSISTANT_COACH"
+                    //TODO: Fix bug
+                    onClick={handleRoleConfirm(
+                        "ASSISTANT_COACH",
+                       "Please confirm that you have reviewed and agree to the coaching guidelines before selecting" +
+                                " this role", 
+                        EXTERNAL_LINK_URLS.coaching,
+                    )}
+                >Assistant Coach</option>
                 <option value="SCOREKEEPER">Scorekeeper</option>
                 <option value="CONCESSIONS">Concessions</option>
                 <option value="UMPIRE">Umpire</option>
@@ -356,16 +417,41 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 onClick={(e) => {setRoleList([])}}>
                     Clear Roles
             </button>
-            <label>Person is Player</label>
+            <label>Person is Player
             <input
+                class="inline-check"
                 type="checkbox"
                 name="is_player"
                 checked={isPlayer}
                 onChange={togglePlayer}
             />
+            </label>
             { isPlayer &&
             <>
-            <label>Franchise (First Choice)</label>
+            <label>Franchise (First Choice)
+                <button
+                    type="button"
+                    class="help-button"
+                    onClick={() => {
+                        const infoList = [
+                            'There are four "franchises" in place for New Life Baseball. Franchises each have individual teams ' +
+                            'for the different age levels (Majors, Minors, Teeball) and are managed by a General Manager.',
+                            "Franchises are assigned different mid-week practices days as well as different practice times " +
+                            "on Saturdays. Franchise practice days/times are:",
+                            "Navy: Mondays 6:00 PM, Saturdays 9:30 AM - 11:20 AM",
+                            "Blue: Tuesdays 6:00 PM, Saturdays 1:30 PM - 3:20 PM",
+                            "Forest: Thursdays 6:00 PM, Saturdays 3:30 - 5:20 PM",
+                            "Maroon: Fridays 6:00 PM, Saturdays 11:30 AM - 1:20 PM",
+                            "New Life Baseball cannot guarantee placement on any given franchise, though we will try to "+
+                            "accomodate requests as space allows. You may specify your first and second choice for franchise. "+
+                            "Additionally, if a practice day will NOT work for your family specify that in the 'Incompatible Franchise' "+
+                            "drop-down."
+                        ]
+                        setInfoItems(infoList);
+                        setShowInfoModal(true);
+                    }}>Help
+                    </button>
+            </label>
             <select
                 name="franchise_first"
                 value={playerObject.franchise_first}
@@ -411,45 +497,74 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 <option value="Adult Medium">Adult Medium</option>
                 <option value="Adult Large">Adult Large</option>
             </select>
-            <label>Returning Player?</label>
-            <input 
-                type="checkbox" 
-                name="returning" 
-                checked={playerObject.returning} 
-                onChange={(e) => { 
-                    const val = e.target.checked;
-                    handlePlayerChange({
-                        target: {name: "returning", value: val}
-                    })
+            <label>Returning Player?
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="returning" 
+                    checked={playerObject.returning} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePlayerChange({
+                            target: {name: "returning", value: val}
+                        })
+                        }
                     }
-                }
-            />
-            <label>Experience Pitching?</label>
-            <input 
-                type="checkbox" 
-                name="can_pitch" 
-                checked={playerObject.can_pitch} 
-                onChange={(e) => { 
-                    const val = e.target.checked;
-                    handlePlayerChange({
-                        target: {name: "can_pitch", value: val}
-                    })
+                />
+            </label>
+            <label>Experience Pitching?
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="can_pitch" 
+                    checked={playerObject.can_pitch} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePlayerChange({
+                            target: {name: "can_pitch", value: val}
+                        })
+                        }
                     }
-                }
-            />
-            <label>Experience Catching?</label>
-            <input 
-                type="checkbox" 
-                name="can_catch" 
-                checked={playerObject.can_catch} 
-                onChange={(e) => { 
-                    const val = e.target.checked;
-                    handlePlayerChange({
-                        target: {name: "can_catch", value: val}
-                    })
+                />
+            </label>
+            <label>Experience Catching?
+                <input 
+                    type="checkbox" 
+                    name="can_catch" 
+                    class="inline-check"
+                    checked={playerObject.can_catch} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePlayerChange({
+                            target: {name: "can_catch", value: val}
+                        })
+                        }
                     }
-                }
-            />
+                />
+            </label>
+            <label>Age Exemption Request?
+                <input 
+                    type="checkbox" 
+                    name="age_exemption_request" 
+                    class="inline-check"
+                    checked={playerObject.age_exemption_request} 
+                    onChange={(e) => { 
+                        if (!checkDateString(personObject.date_of_birth) ||
+                            getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) <= 13 ) {
+                            const errors = [ "Age exemption is only required if age at the season start is older than 13" ]
+                            setValidateErrors(errors)
+                            setShowValidateModal(true)
+                            e.target.checked = false;
+                            return;
+                        }
+                        const val = e.target.checked;
+                        handlePlayerChange({
+                            target: {name: "age_exemption_request", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
             </>
             }
             <button
@@ -477,8 +592,57 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 </div>
             </div>
         )}
+        { showInfoModal && (
+            <div className="modal-overlay">
+                <div className="modal-content">
+                    {infoItems.map((info) => (
+                        <InfoRow infoString={info}/>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => setShowInfoModal(false)}
+                    >OK</button>
+                </div>
+            </div>
+        )}
+        { showConfirmModal && (
+            <div className="modal-overlay">
+                <div className="modal-content">
+                    { confirmData.text && (
+                        <InfoRow infoString={confirmData.text}/>
+                    )}
+                    { confirmData.link && (
+                        <InfoLink infoLink={confirmData.link}/>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const tempRoleList = [...roleList]
+                            const index = tempRoleList.indexOf(confirmRole)
+                            if (index != -1) {
+                                tempRoleList.splice(index, 1)
+                                setRoleList(tempRoleList)
+                            }
+                            setShowConfirmModal(false)
+                        }}
+                    >No, Cancel</button>
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmModal(false)}
+                    >Yes, Confirm</button>
+                </div>
+            </div>
+        )}
         </div>
     )
+}
+
+function InfoRow({infoString}) {
+    return (<div class="item-display"><div class="item-text">{infoString}</div></div>)
+}
+
+function InfoLink({infoLink}) {
+    return (<div class="item-link"><a href={infoLink}>{infoLink}</a></div>)
 }
 
 function ErrorRow({errorString}) {

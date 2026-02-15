@@ -7,13 +7,14 @@ import { getAgeNow } from "../util"
 
 function Home() {
     const [personObjects, setPersonObjects] = useState([]);
-    const [content, setContent] = useState("");
-    const [title, setTitle] = useState("");
+    //const [content, setContent] = useState("");
+    //const [title, setTitle] = useState("");
     const [familyObject, setFamilyObject] = useState({});
     const [submissionErrors, setSubmissionErrors] = useState([]);
     const [submissionWarnings, setSubmissionWarnings] = useState([]);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [showWarningModal, setShowWarningModal] = useState(false);
+    const baseUrl = import.meta.env.VITE_STATIC_FILE_URL;
 
     const navigate = useNavigate()
 
@@ -134,7 +135,9 @@ function Home() {
                     "Head Coaches are approved by the General Managers of each " +
                     "franchise. If you have not already spoken with the General "+
                     "Manager about being Head Coach, you should not choose this "+
-                    "role."
+                    "role. All coaches must review and agree to the coaching "+
+                    "guidelines.",
+                    links: [baseUrl + "/nlicc_coach_guidelines.pdf"]
                 })
             }
         }
@@ -146,7 +149,7 @@ function Home() {
                     "All coaches are required to read and agree to our "+
                     "guidelines and code of conduct. Please review these documents "+
                     "before proceeding, as well as information about coach meetings.",
-                    links: ["https://somelink.com"]    
+                    links: [baseUrl + "/nlicc_coach_guidelines.pdf"]    
                 })
             }
         }
@@ -157,7 +160,7 @@ function Home() {
                     text: `You have ${name} signed up to volunteer as an umpire. ` +
                     "Please follow the link to find information about umpire rules "+
                     "and training.",
-                    links: ["https://somelink.com"]    
+                    links: [baseUrl +"/nlicc_umpire_rulebook.pdf"]    
                 })
             }
         }
@@ -168,7 +171,7 @@ function Home() {
                     text: `You have ${name} signed up as a concessions volunteer. ` +
                     "Please follow the link to find information about concessions duties "+
                     "and training.",
-                    links: ["https://somelink.com"]    
+                    links: [baseUrl + "/concession_stand_operations.pdf"]    
                 })
             }
         }
@@ -179,7 +182,7 @@ function Home() {
                     text: `You have ${name} signed up to volunteer as a scorekeeper. ` +
                     "Please follow the link to find information about scorekeeping rules "+
                     "and training.",
-                    links: ["https://somelink.com"]    
+                    links: [baseUrl + "/nlicc_scoring_guidelines.pdf"]    
                 })
             }
         }
@@ -396,7 +399,7 @@ function Item({item}) {
     return (
         <div class="item-display">
             <div class="item-text">{item.text}</div>
-            {item.links?.map((link) => (<div class="item-link">{link}</div>))}
+            {item.links?.map((link) => (<div class="item-link"><a href={link}>{link}</a></div>))}
         </div>
     )
 }

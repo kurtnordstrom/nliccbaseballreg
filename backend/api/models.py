@@ -22,6 +22,8 @@ class Person(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     is_user = models.BooleanField(default=False)
     medical_experience = models.CharField(max_length=64, blank=True)
+    is_parent = models.BooleanField(default=False)
+    can_pickup = models.BooleanField(default=False)
 
 class Role(models.Model):
     name = models.CharField(max_length=100)
@@ -38,3 +40,4 @@ class Player(models.Model):
     returning = models.BooleanField(default=False)
     can_catch = models.BooleanField(default=False)
     can_pitch = models.BooleanField(default=False)
+    age_exemption_request = models.BooleanField(default=False)

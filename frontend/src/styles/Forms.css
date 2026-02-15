@@ -100,3 +100,20 @@
 .item-link {
 
 }
+
+.help-button {
+  background-color:#23a82a;
+  margin: 2px;
+}
+
+.inline-check {
+  vertical-align: middle;
+}
+
+label {
+  margin: 3px;
+}
+
+button {
+  margin: 3px;
+}

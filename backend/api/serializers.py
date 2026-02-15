@@ -9,7 +9,8 @@ class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Person
         fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address",\
-                  "is_user", "family", "phone_primary", "phone_secondary", "medical_experience"]
+                  "is_user", "family", "phone_primary", "phone_secondary", "medical_experience",
+                  "is_parent", "can_pickup"]
         #extra_kwargs = {
         #    "user" : { "read_only":True},
         #    "family" : { "read_only" : True }
@@ -68,4 +69,5 @@ class RoleSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = [ "id", "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", "season", "returning", "can_pitch", "can_catch" ]
+        fields = [ "id", "person", "shirt_size", "franchise_first", "franchise_second", "franchise_no", 
+                  "season", "returning", "can_pitch", "can_catch", "age_exemption_request" ]
