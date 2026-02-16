@@ -16,7 +16,7 @@ class Person(models.Model):
     email = models.CharField(max_length=256, blank=True)
     phone_primary = models.CharField(max_length=32, blank=True)
     phone_secondary = models.CharField(max_length=32, blank=True)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(blank=True, null=True)
     address = models.CharField(max_length=256, blank=True)
     family = models.ForeignKey(Family, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -24,6 +24,7 @@ class Person(models.Model):
     medical_experience = models.CharField(max_length=64, blank=True)
     is_parent = models.BooleanField(default=False)
     can_pickup = models.BooleanField(default=False)
+    is_adult = models.BooleanField(default=False)
 
 class Role(models.Model):
     name = models.CharField(max_length=100)

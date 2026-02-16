@@ -10,7 +10,7 @@ class PersonSerializer(serializers.ModelSerializer):
         model = Person
         fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address",\
                   "is_user", "family", "phone_primary", "phone_secondary", "medical_experience",
-                  "is_parent", "can_pickup"]
+                  "is_parent", "can_pickup", "is_adult"]
         #extra_kwargs = {
         #    "user" : { "read_only":True},
         #    "family" : { "read_only" : True }
@@ -21,7 +21,8 @@ class NestedPersonSerializer(serializers.ModelSerializer):
     #user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field='username', required=False)
     class Meta:
         model = Person
-        fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address", "is_user"]
+        fields = ["id", "first_name", "last_name", "email", "date_of_birth", "address", "is_user", "is_adult", 
+                  "is_parent", "can_pickup", "phone_primary"]
         #extra_kwargs = {
         #    "user" : { "read_only":True},
         #    "family" : { "read_only" : True }

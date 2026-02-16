@@ -11,6 +11,7 @@ export const EXTERNAL_LINK_URLS = {
     coaching: baseUrl + "/nlicc_coach_guidelines.pdf",
     medical_release: baseUrl + "/nlicc_medical_release_form.pdf",
     umpire_rules: baseUrl + "/nlicc_umpire_rulebook.pdf",
-    child_protection: baseUrl + "/nlicc_child_protection_policy.pdf"
+    child_protection: baseUrl + "/nlicc_child_protection_policy.pdf",
+    volunteer_form: "https://nlicc.ccbchurch.com/goto/forms/88/responses/new"
 }
 

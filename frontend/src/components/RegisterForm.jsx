@@ -1,7 +1,7 @@
 import {useState} from "react"
 import api from "../api"
 import {useNavigate} from "react-router-dom"
-import {checkDateString} from "../util"
+//import {checkDateString} from "../util"
 
 function RegisterForm({route}) {
     const [userObject, setUserObject] = useState({})
@@ -17,6 +17,10 @@ function RegisterForm({route}) {
         e.preventDefault();
         const submissionObject = structuredClone(userObject);
         submissionObject.person = structuredClone(personObject);
+
+        //Assume that the parent can pick up
+        submissionObject.person.can_pickup = true;
+
         submissionObject.family = structuredClone(familyObject);
 
         const errors = doValidation(submissionObject)
@@ -35,25 +39,41 @@ function RegisterForm({route}) {
 
     const doValidation = (submissionObject) => {
         const errors = []
-        if(!submissionObject.username) {
-            errors.push("You must provide username")
+        if (!submissionObject.username) {
+            errors.push("You must provide a username")
         }        
-        if(!submissionObject.password) {
+        if (!submissionObject.password) {
             errors.push("You must provide a password")
         }
-        if(submissionObject.password != passwordCheck) {
+        if (submissionObject.password != passwordCheck) {
             errors.push("Provided passwords do not match")
         }
-        if(!submissionObject.person.first_name || !submissionObject.person.last_name) {
+        if (!submissionObject.person.first_name || !submissionObject.person.last_name) {
             errors.push("You must provide a first and last name")
         }
-        if(!submissionObject.person.email) {
+        if (!submissionObject.person.email) {
             errors.push("You must provide a valid email address")
         }
+
+        if (!submissionObject.person.address) {
+            errors.push("Please provide a full address for the primary registrant")
+        }
+
+        if (!submissionObject.person.phone_primary) {
+            errors.push("Pleae provide at least one valid phone number (with area code)")
+        }
+        /*
         if(!checkDateString(submissionObject.person.date_of_birth)) {
             errors.push("You must provide a birthdate in the form of YYYY-MM-DD")
         }
-        if(!submissionObject.family.family_name) {
+        */
+        if (!submissionObject.person.is_adult) {
+            errors.push("Primary registrant must be a legal adult")
+        }
+        if (!submissionObject.person.is_parent) {
+            errors.push("Primary registrant must be a parent to player(s) being registered")
+        }
+        if (!submissionObject.family.family_name) {
             errors.push("Please provide a name for your family (typically your last name)")
         }
         setSubmissionErrors(errors)
@@ -88,7 +108,7 @@ function RegisterForm({route}) {
         <div>
         <form onSubmit={handleSubmit} className="form-container">
             <h1>Register New User</h1>
-            <label>Username</label>
+            <label>Username (You will use this to login to the system)</label>
             <input
                 className="form-input"
                 type="text"
@@ -126,6 +146,16 @@ function RegisterForm({route}) {
                 type="text"
                 value={personObject.last_name}
                 name="last_name"
+                onBlur={
+                    (e) => {
+                        if (!familyObject.family_name) {
+                            setFamilyObject({
+                                ...familyObject,
+                                family_name: e.target.value
+                            })
+                        }
+                    }
+                }
                 onChange={handlePersonChange}
             />
             <label>Email</label>
@@ -136,15 +166,15 @@ function RegisterForm({route}) {
                 name="email"
                 onChange={handlePersonChange}
             />
-            <label>Date of Birth</label>
+            <label>Primary Phone</label>
             <input
                 className="form-input"
                 type="text"
-                value={personObject.date_of_birth}
-                name="date_of_birth"
+                value={personObject.phone_primary}
+                name="phone_primary"
                 onChange={handlePersonChange}
             />
-            <label>Address</label>
+            <label>Address (Number, Street, City, State)</label>
             <input
                 className="form-input"
                 type="text"
@@ -152,6 +182,36 @@ function RegisterForm({route}) {
                 name="address"
                 onChange={handlePersonChange}
             />
+            <label>Person is 18 or older
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="is_adult" 
+                    checked={personObject.is_adult} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePersonChange({
+                            target: {name: "is_adult", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
+            <label>Person is parent/guardian of player(s)
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="is_parent" 
+                    checked={personObject.is_parent} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePersonChange({
+                            target: {name: "is_parent", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
             <label>Family Name</label>
             <input
                 className="form-input"

@@ -4,6 +4,7 @@ import Note from "../components/Note"
 import Person from "../components/Person"
 import {useNavigate} from "react-router-dom"
 import { getAgeNow } from "../util"
+import { EXTERNAL_LINK_URLS } from "../constants"
 
 function Home() {
     const [personObjects, setPersonObjects] = useState([]);
@@ -70,10 +71,18 @@ function Home() {
         const errorList = []
         const warningList = []
         const playerList = []
+        let parentCount = 0
+        let ageExemption = false
         for(const person of masterList) {
             const personName = `${person.first_name} ${person.last_name}`
             if(person.player) {
                 playerList.push(personName)
+                if(person.player.age_exemption_request) {
+                    ageExemption = true
+                }
+            }
+            if(person.is_parent) {
+                parentCount++
             }
             if (person.roles) {
                 for(const role of person.roles) {
@@ -111,6 +120,12 @@ function Home() {
             })
         }
 
+        if (parentCount < 1) {
+            errorList.push({text:"You do not have any registrants flagged as parents. You must enter registration " +
+                "data for at least one parent"
+            })
+        }
+
         if (errorList.length > 0) {
             setSubmissionErrors(errorList)
             setShowErrorModal(true)
@@ -137,7 +152,7 @@ function Home() {
                     "Manager about being Head Coach, you should not choose this "+
                     "role. All coaches must review and agree to the coaching "+
                     "guidelines.",
-                    links: [baseUrl + "/nlicc_coach_guidelines.pdf"]
+                    links: [EXTERNAL_LINK_URLS.coaching]
                 })
             }
         }
@@ -149,7 +164,7 @@ function Home() {
                     "All coaches are required to read and agree to our "+
                     "guidelines and code of conduct. Please review these documents "+
                     "before proceeding, as well as information about coach meetings.",
-                    links: [baseUrl + "/nlicc_coach_guidelines.pdf"]    
+                    links: [EXTERNAL_LINK_URLS.coaching]    
                 })
             }
         }
@@ -160,7 +175,7 @@ function Home() {
                     text: `You have ${name} signed up to volunteer as an umpire. ` +
                     "Please follow the link to find information about umpire rules "+
                     "and training.",
-                    links: [baseUrl +"/nlicc_umpire_rulebook.pdf"]    
+                    links: [EXTERNAL_LINK_URLS.umpire_rules]    
                 })
             }
         }
@@ -171,7 +186,7 @@ function Home() {
                     text: `You have ${name} signed up as a concessions volunteer. ` +
                     "Please follow the link to find information about concessions duties "+
                     "and training.",
-                    links: [baseUrl + "/concession_stand_operations.pdf"]    
+                    links: [EXTERNAL_LINK_URLS.concessions]    
                 })
             }
         }
@@ -182,10 +197,12 @@ function Home() {
                     text: `You have ${name} signed up to volunteer as a scorekeeper. ` +
                     "Please follow the link to find information about scorekeeping rules "+
                     "and training.",
-                    links: [baseUrl + "/nlicc_scoring_guidelines.pdf"]    
+                    links: [EXTERNAL_LINK_URLS.scorekeeping]    
                 })
             }
         }
+
+        warningList.push({text: "All adult volunteers should fill out the NLICC volunteer form online", links: [EXTERNAL_LINK_URLS.volunteer_form]})
 
         if(playerCount > 0) {
             warningList.push({
@@ -198,6 +215,12 @@ function Home() {
                 "but we cannot make guarantees, due to limited space. You will be notified of "+
                 "placement once registration is closed and the rosters are completed."
             })
+
+            if (ageExemption) {
+                warningList.push({text: "You have requested an age exemption. Please state the reasons for doing so in the "+
+                    "note field of the family information"
+                })
+            }
 
             warningList.push({
                 text: `Your total fees are `+
@@ -399,7 +422,7 @@ function Item({item}) {
     return (
         <div class="item-display">
             <div class="item-text">{item.text}</div>
-            {item.links?.map((link) => (<div class="item-link"><a href={link}>{link}</a></div>))}
+            {item.links?.map((link) => (<div class="item-link"><a href={link} target="_blank">{link}</a></div>))}
         </div>
     )
 }

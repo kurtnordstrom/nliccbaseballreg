@@ -51,7 +51,14 @@ function Form({route, method}) {
         <button className="form-button" type="submit">
             {name}
         </button>
+        <button 
+            className="form-button"
+            type="button"
+            onClick={() => {navigate("/register")}}
+            >Register New User</button>
+
    </form>
+
 }
 
 export default Form

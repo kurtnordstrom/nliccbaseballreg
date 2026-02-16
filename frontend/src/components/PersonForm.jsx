@@ -19,7 +19,6 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
     const [confirmRole, setConfirmRole] = useState("")
     const [confirmData, setConfirmData] = useState({})
 
-    const baseUrl = import.meta.env.VITE_STATIC_FILE_URL;
 
     const navigate = useNavigate()
 
@@ -141,13 +140,27 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         console.log("Validating")
         const errors = []
 
-        if (!checkDateString(personObject.date_of_birth)) {
-            errors.push("Birthdate must be present and be in the form of YYYY-MM-DD")
+        if (personObject.date_of_birth && !checkDateString(personObject.date_of_birth)) {
+            errors.push("Birthdate must be in the form of YYYY-MM-DD")
+        }
+
+        if (!personObject.first_name || !personObject.last_name) {
+            errors.push("Please specify a first and last name")
+        }
+
+        if (!personObject.is_adult) {
+            if(personObject.can_pickup) {
+                errors.push("Only adults can be authorized to pick up children")
+            }
+            if (personObject.is_parent) {
+                errors.push("Only adults can be designated as parents")
+            }
         }
 
         if(personObject.is_user) {
-            if(getAgeNow(new Date(personObject.date_of_birth)) < 18) {
-                errors.push("Primary registrant must be over 18 years of age")
+            //if(getAgeNow(new Date(personObject.date_of_birth)) < 18) {
+            if(!personObject.is_adult) {
+                errors.push("Primary registrant must be a legal adult")
             }
             if(!personObject.email) {
                 errors.push("Email address required for primary registrant")
@@ -161,12 +174,22 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         }
 
         if (isPlayer) {
-            if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) > 13 &&
-                !playerObject.age_exemption_request) {
-                errors.push(`Players cannot be older than 13 at the beginning of the season (${SEASON_START_DATE}). ` +
-                    "If you would like to request an age exemption, please check the box for it, and list any relevant " +
-                    "information in the notes field on the Family Information form"
-                )
+            if (personObject.is_adult) {
+                errors.push("Adults cannot be players")
+            }
+            if (personObject.is_parent) {
+                errors.push("Parents cannot be players")
+            }
+            if (!checkDateString(personObject.date_of_birth)) {
+                errors.push("All players must have a date of birth specified in the format of YYYY-MM-DD")
+            } else {
+                if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) > 13 &&
+                    !playerObject.age_exemption_request) {
+                    errors.push(`Players cannot be older than 13 at the beginning of the season (${SEASON_START_DATE}). ` +
+                        "If you would like to request an age exemption, please check the box for it, and list any relevant " +
+                        "information in the notes field on the Family Information form"
+                    )
+                }
             }
             if( (playerObject.franchise_first && playerObject.franchise_second) && 
                 (playerObject.franchise_first === playerObject.franchise_second)) {
@@ -315,7 +338,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="date_of_birth"
                 onChange={handlePersonChange}
             />
-            <label>Address</label>
+            <label>Address (Number, Street, City, State)</label>
             <input
                 className="form-input"
                 type="text"
@@ -339,6 +362,21 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="phone_secondary"
                 onChange={handlePersonChange}
             />
+            <label>Person is 18 or older
+                <input 
+                    class="inline-check"
+                    type="checkbox" 
+                    name="is_adult" 
+                    checked={personObject.is_adult} 
+                    onChange={(e) => { 
+                        const val = e.target.checked;
+                        handlePersonChange({
+                            target: {name: "is_adult", value: val}
+                        })
+                        }
+                    }
+                />
+            </label>
             <label>Person is parent/guardian of player(s)
                 <input 
                     class="inline-check"
@@ -692,7 +730,7 @@ function InfoRow({infoString}) {
 }
 
 function InfoLink({infoLink}) {
-    return (<div class="item-link"><a href={infoLink}>{infoLink}</a></div>)
+    return (<div class="item-link"><a href={infoLink} target="_blank">{infoLink}</a></div>)
 }
 
 function ErrorRow({errorString}) {
