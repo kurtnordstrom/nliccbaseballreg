@@ -2,7 +2,7 @@ import {useState, useEffect} from "react"
 import api from "../api"
 import {useNavigate} from "react-router-dom"
 import { getAgeAtDate, getAgeNow, checkDateString } from "../util"
-import { AGE_CUT_OFF_DATE, EXTERNAL_LINK_URLS } from "../constants"
+import { AGE_CUT_OFF_DATE, EXTERNAL_LINK_URLS, VOLUNTEER_JOB_DESCS } from "../constants"
 
 
 function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
@@ -328,7 +328,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 name="email"
                 onChange={handlePersonChange}
             />
-            <label>Date of Birth</label>
+            <label>Date of Birth (YYYY-MM-DD)</label>
             <input
                 className="form-input"
                 type="text"
@@ -482,8 +482,8 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     value="SCOREKEEPER"
                     onClick={ () => {
                         const confirmOb = {
-                            text: "Please confirm that you have read and understand the " +
-                                "rule for scorekeeping, linked below",
+                            text: VOLUNTEER_JOB_DESCS.scorekeeper + ". Please confirm that you have read and understand the " +
+                                "rules for scorekeeping, linked below",
                             link: EXTERNAL_LINK_URLS.scorekeeping
                         }
                         setConfirmData(confirmOb)
@@ -494,7 +494,7 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     value="CONCESSIONS"
                     onClick={ () => {
                         const confirmOb = {
-                            text: "Please confirm that you have read and understand the " +
+                            text: VOLUNTEER_JOB_DESCS.concessions + ". Please confirm that you have read and understand the " +
                                 "guidelines for concessions work, linked below",
                             link: EXTERNAL_LINK_URLS.concessions
                         }
@@ -505,37 +505,65 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     >Concessions</option>
                 <option 
                     value="PROPERTY_MANAGER"
+                    onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.property_manager])
+                        setShowInfoModal(true)
+                    }}
                     >Property Manager
                 </option>
                 <option 
                     value="PROPERTY_ASSISTANT"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.property_assistant])
+                        setShowInfoModal(true)
+                    }}
                     >Property Assistant
                 </option>
                 <option 
                     value="FIELD_ASSISTANT"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.field_assistant])
+                        setShowInfoModal(true)
+                    }}
                     >Field Assistant
                 </option>
                 <option 
                     value="LOST_AND_FOUND"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.lost_and_found])
+                        setShowInfoModal(true)
+                    }}
                     >Lost & Found Coordinator
                 </option>
                 <option 
                     value="EQUIPMENT_MANAGER"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.equipment_manager])
+                        setShowInfoModal(true)
+                    }}
                     >Franchise Equipment Manager
                 </option>
                 <option 
                     value="SCOREBOARD_OPERATOR"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.scoreboard_operator])
+                        setShowInfoModal(true)
+                    }}
                     >Team Scoreboard Operator
                 </option>
                 <option 
                     value="SNACK COORDINATOR"
+                     onClick={() => {
+                        setInfoItems([VOLUNTEER_JOB_DESCS.snack_coordinator])
+                        setShowInfoModal(true)
+                    }}
                     >Team Snack Coordinator
                 </option>
                 <option 
                     value="UMPIRE"
                     onClick={ () => {
                         const confirmOb = {
-                            text: "Please confirm that you have read and understand the " +
+                            text: VOLUNTEER_JOB_DESCS.umpire + ". Please confirm that you have read and understand the " +
                                 "rules and guidelines for umpires, linked below",
                             link: EXTERNAL_LINK_URLS.umpire_rules
                         }
