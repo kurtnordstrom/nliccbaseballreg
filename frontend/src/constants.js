@@ -2,7 +2,7 @@ const baseUrl = import.meta.env.VITE_STATIC_FILE_URL;
 
 export const ACCESS_TOKEN = "access";
 export const REFRESH_TOKEN = "refresh";
-export const SEASON_START_DATE = "2026-03-07"
+export const AGE_CUT_OFF_DATE = "2026-01-01"
 
 export const EXTERNAL_LINK_URLS = {
     concessions: baseUrl + "/concession_stand_operations.pdf",

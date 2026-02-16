@@ -2,7 +2,7 @@ import {useState, useEffect} from "react"
 import api from "../api"
 import {useNavigate} from "react-router-dom"
 import { getAgeAtDate, getAgeNow, checkDateString } from "../util"
-import { SEASON_START_DATE, EXTERNAL_LINK_URLS } from "../constants"
+import { AGE_CUT_OFF_DATE, EXTERNAL_LINK_URLS } from "../constants"
 
 
 function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
@@ -158,7 +158,6 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
         }
 
         if(personObject.is_user) {
-            //if(getAgeNow(new Date(personObject.date_of_birth)) < 18) {
             if(!personObject.is_adult) {
                 errors.push("Primary registrant must be a legal adult")
             }
@@ -183,9 +182,9 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
             if (!checkDateString(personObject.date_of_birth)) {
                 errors.push("All players must have a date of birth specified in the format of YYYY-MM-DD")
             } else {
-                if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) > 13 &&
+                if(getAgeAtDate(new Date(personObject.date_of_birth), new Date(AGE_CUT_OFF_DATE)) > 13 &&
                     !playerObject.age_exemption_request) {
-                    errors.push(`Players cannot be older than 13 at the beginning of the season (${SEASON_START_DATE}). ` +
+                    errors.push(`Players cannot be older than 13 at the beginning of the season (${AGE_CUT_OFF_DATE}). ` +
                         "If you would like to request an age exemption, please check the box for it, and list any relevant " +
                         "information in the notes field on the Family Information form"
                     )
@@ -278,7 +277,6 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     await api.delete(`/api/role/${entry}/`)                        
                 }
                 if (isPlayer) {
-                    //await api.put(`/api/player/${playerObject.id}/`, playerObject)
                     await updateOrCreatePlayer(person_id)
                 } else {
                     await deletePlayerIfExisting()
@@ -419,7 +417,25 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                 <option value="physician">Physician</option>
             </select>
             
-            <label>Service Roles</label>
+            <label>Volunteer Opportunities
+                <button
+                    type="button"
+                    class="help-button"
+                    onClick={() => {
+                        const infoList = [
+                            'As an entirely volunteer-run organization, New Life Baseball requires a lot of hands to '+
+                            'function. As such, we require at least one person from every family (ideally more!) to '+
+                            'sign up to serve in a volunteer role for the league.',
+                            'Please note that there is the possibility '+
+                            'that a given volunteer role will be completely filled when registrations are processed. '+
+                            'In this case, we will contact you and arrange for a different role to be taken instead.',
+                            'Thank you for helping to make New Life Baseball even better for our kids!'
+                        ]
+                        setInfoItems(infoList);
+                        setShowInfoModal(true);
+                    }}>Help
+                    </button>
+            </label>
             <select 
                 name="personRoles"
                 multiple={true}
@@ -488,6 +504,34 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     }}
                     >Concessions</option>
                 <option 
+                    value="PROPERTY_MANAGER"
+                    >Property Manager
+                </option>
+                <option 
+                    value="PROPERTY_ASSISTANT"
+                    >Property Assistant
+                </option>
+                <option 
+                    value="FIELD_ASSISTANT"
+                    >Field Assistant
+                </option>
+                <option 
+                    value="LOST_AND_FOUND"
+                    >Lost & Found Coordinator
+                </option>
+                <option 
+                    value="EQUIPMENT_MANAGER"
+                    >Franchise Equipment Manager
+                </option>
+                <option 
+                    value="SCOREBOARD_OPERATOR"
+                    >Team Scoreboard Operator
+                </option>
+                <option 
+                    value="SNACK COORDINATOR"
+                    >Team Snack Coordinator
+                </option>
+                <option 
                     value="UMPIRE"
                     onClick={ () => {
                         const confirmOb = {
@@ -526,10 +570,10 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                             'for the different age levels (Majors, Minors, Teeball) and are managed by a General Manager.',
                             "Franchises are assigned different mid-week practices days as well as different practice times " +
                             "on Saturdays. Franchise practice days/times are:",
-                            "Navy: Mondays 6:00 PM, Saturdays 9:30 AM - 11:20 AM",
-                            "Blue: Tuesdays 6:00 PM, Saturdays 1:30 PM - 3:20 PM",
-                            "Forest: Thursdays 6:00 PM, Saturdays 3:30 - 5:20 PM",
-                            "Maroon: Fridays 6:00 PM, Saturdays 11:30 AM - 1:20 PM",
+                            "Navy: Mondays 5:30 PM, Saturdays 11:30 AM - 1:20 PM",
+                            "Blue: Tuesdays 5:30 PM, Saturdays 1:30 PM - 3:20 PM",
+                            "Forest: Thursdays 5:30 PM, Saturdays 3:30 PM - 5:20 PM",
+                            "Maroon: Fridays 5:30 PM, Saturdays 9:30 AM - 11:20 AM",
                             "New Life Baseball cannot guarantee placement on any given franchise, though we will try to "+
                             "accomodate requests as space allows. You may specify your first and second choice for franchise. "+
                             "Additionally, if a practice day will NOT work for your family specify that in the 'Incompatible Franchise' "+
@@ -637,13 +681,26 @@ function PersonForm({method, person_id}) { //method is either 'create' or 'edit'
                     class="inline-check"
                     checked={playerObject.age_exemption_request} 
                     onChange={(e) => { 
-                        if (!checkDateString(personObject.date_of_birth) ||
-                            getAgeAtDate(new Date(personObject.date_of_birth), new Date(SEASON_START_DATE)) <= 13 ) {
-                            const errors = [ "Age exemption is only required if age at the season start is older than 13" ]
-                            setValidateErrors(errors)
-                            setShowValidateModal(true)
-                            e.target.checked = false;
-                            return;
+                        if (e.target.checked) {
+                            if (!checkDateString(personObject.date_of_birth) ||
+                                getAgeAtDate(new Date(personObject.date_of_birth), new Date(AGE_CUT_OFF_DATE)) <= 13 ) {
+                                const errors = [ "Age exemption is only required if age at the beginning of the year is older than 13" ]
+                                setValidateErrors(errors)
+                                setShowValidateModal(true)
+                                e.target.checked = false;
+                                return;
+                            } else {
+                                const infoList = [
+                                    'The age limit for players in New Life Baseball is thirteen years old. In a few cases '+
+                                    '(typically if a player has turned 13 in December) an exemption can be granted to play '+
+                                    'if it is determined that the player would not be an unstabilizing influence on the team '+
+                                    'balance.',
+                                    'All age exemptions must be reviewed by the NLB Commisioner and you are encouraged to '+
+                                    'discuss the request ahead of time before submitting the registration.'
+                                ]
+                                setInfoItems(infoList);
+                                setShowInfoModal(true);
+                            }
                         }
                         const val = e.target.checked;
                         handlePlayerChange({
