@@ -209,6 +209,11 @@ function Home() {
                 text: "You have the following player(s) to register:" +
                 playerList.join(", ")
             })
+
+            warningList.push({
+                text: "Please fill out the linked medical release for each player registered",
+                links: [ EXTERNAL_LINK_URLS.medical_release]
+            })
    
             warningList.push({
                 text: "We will do our best to honor preferences for practices days/franchises, " +
