@@ -8,8 +8,6 @@ from datetime import date, datetime
 import csv
 
 
-
-
 class Command(BaseCommand):
     def makePersonListing(self, personList):
         nameList = []
@@ -22,12 +20,14 @@ class Command(BaseCommand):
         today = date.today()
         return today.year - birthDate.year - ((today.month, today.day) < (birthDate.month, birthDate.day))
     
-    def handle(self, *args, **options):
+
+    def make_sheets(self, family_set, prefix=""):
         family_sheet_list = []
         player_sheet_list = []
 
-        registered_families = Family.objects.filter(registration_submitted=True)
-        for family in registered_families:
+        #registered_families = Family.objects.filter(registration_submitted=True)
+        families = family_set
+        for family in families:
             family_object = {}
             family_object["family_id"] = family.id
             family_object["family_name"] = family.family_name
@@ -35,8 +35,11 @@ class Command(BaseCommand):
             reg_date = family.registration_date
             dateString = "%Y-%m-%dT%H:%M:%S"
             tz = pytz.timezone('EST')
-            reg_date = reg_date.astimezone(tz)
-            reg_date_string = reg_date.strftime(dateString)
+            if reg_date:
+                reg_date = reg_date.astimezone(tz)
+                reg_date_string = reg_date.strftime(dateString)
+            else:
+                reg_date_string = ""
             family_object["registration_date"] = reg_date_string
             family_object["payment_option"] = family.payment_option
             family_object["notes"] = family.notes
@@ -99,8 +102,8 @@ class Command(BaseCommand):
 
         nowdate = datetime.now()
 
-        family_csv_path = "/tmp/family-%s.csv" % nowdate.isoformat()
-        player_csv_path = "/tmp/player-%s.csv" % nowdate.isoformat()
+        family_csv_path = "/tmp/%sfamily-%s.csv" % (prefix, nowdate.isoformat())
+        player_csv_path = "/tmp/%splayer-%s.csv" % (prefix, nowdate.isoformat())
 
         with open(family_csv_path, 'w', newline='') as csvfile:
             fieldnames = [
@@ -146,5 +149,12 @@ class Command(BaseCommand):
             
             for p in player_sheet_list:
                 writer.writerow(p)
+
+    def handle(self, *args, **options):
+        registered_families = Family.objects.filter(registration_submitted=True)
+        unregistered_families = Family.objects.filter(registration_submitted=False)
+        self.make_sheets(registered_families)
+        self.make_sheets(unregistered_families, "unregistered-")
+
 
 
