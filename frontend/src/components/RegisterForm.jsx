@@ -29,10 +29,12 @@ function RegisterForm({route}) {
             setShowErrorModal(true)
         } else {
             try {
-                const res = await api.post(route, submissionObject)
+                await api.post(route, submissionObject)
                 navigate("/login")
             } catch (error) {
-                alert (error) 
+                const errorMsg = `Error submitting registration: ${error.response?.status}: ${JSON.stringify(error.response?.data)}`
+                console.log(errorMsg)
+                alert (errorMsg) 
             } 
         }
     }
