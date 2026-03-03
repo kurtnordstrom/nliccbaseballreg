@@ -67,6 +67,7 @@
 /* The dark, semi-transparent background */
 .modal-overlay {
   position: fixed;
+  overflow-y: scroll;
   top: 0;
   left: 0;
   width: 100%;
