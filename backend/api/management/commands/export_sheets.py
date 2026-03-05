@@ -21,7 +21,11 @@ class Command(BaseCommand):
         return today.year - birthDate.year - ((today.month, today.day) < (birthDate.month, birthDate.day))
     
 
-    def make_sheets(self, family_set, prefix=""):
+    def calculateAgeAtYearStart(self, birthDate):
+        today = date.today()
+        return today.year - birthDate.year - ((1, 1) < (birthDate.month, birthDate.day))    
+
+    def make_sheets(self, family_set, prefix="", mode="summary"):
         family_sheet_list = []
         player_sheet_list = []
 
@@ -83,7 +87,8 @@ class Command(BaseCommand):
                 player_object["registration_date"] = reg_date_string
                 birthDate = player_person.date_of_birth
                 player_object["date_of_birth"] = birthDate.isoformat()
-                player_object["current_age"] = self.calculateAge(birthDate)
+                #player_object["current_age"] = self.calculateAge(birthDate)
+                player_object["year_start_age"] = self.calculateAgeAtYearStart(birthDate)
                 player_object["first_franchise_choice"] = player.franchise_first
                 player_object["second_franchise_choice"] = player.franchise_second
                 player_object["incompatible_franchise"] = player.franchise_no
@@ -102,59 +107,112 @@ class Command(BaseCommand):
 
         nowdate = datetime.now()
 
-        family_csv_path = "/tmp/%sfamily-%s.csv" % (prefix, nowdate.isoformat())
-        player_csv_path = "/tmp/%splayer-%s.csv" % (prefix, nowdate.isoformat())
+        if mode == "summary":
+            family_csv_path = "/tmp/%sfamily-%s.csv" % (prefix, nowdate.isoformat())
+            player_csv_path = "/tmp/%splayer-%s.csv" % (prefix, nowdate.isoformat())
 
-        with open(family_csv_path, 'w', newline='') as csvfile:
-            fieldnames = [
-                "family_id",
-                "family_name",
-                "non_players",
-                "players",
-                "primary_email",
-                "primary_phone",
-                "volunteer_roles",
-                "dues",
-                "payment_option",
-                "notes",
-                "registration_date"
-            ]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            with open(family_csv_path, 'w', newline='') as csvfile:
+                fieldnames = [
+                    "family_id",
+                    "family_name",
+                    "non_players",
+                    "players",
+                    "primary_email",
+                    "primary_phone",
+                    "volunteer_roles",
+                    "dues",
+                    "payment_option",
+                    "notes",
+                    "registration_date"
+                ]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-            writer.writeheader()
+                writer.writeheader()
 
-            for f in family_sheet_list:
-                writer.writerow(f)
+                for f in family_sheet_list:
+                    writer.writerow(f)
 
-        with open(player_csv_path, 'w', newline='') as csvfile:
-            player_fieldnames = [
-                "family_name",
-                "last_name",
-                "first_name",
-                "date_of_birth",
-                "current_age",
-                "age_exemption_requested",
-                "first_franchise_choice",
-                "second_franchise_choice",
-                "incompatible_franchise",
-                "returning_player",
-                "can_pitch",
-                "can_catch",
-                "shirt_size",
-                "registration_date"                    
-            ]
-            writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
+            with open(player_csv_path, 'w', newline='') as csvfile:
+                player_fieldnames = [
+                    "family_name",
+                    "last_name",
+                    "first_name",
+                    "date_of_birth",
+                    "year_start_age",
+                    "age_exemption_requested",
+                    "first_franchise_choice",
+                    "second_franchise_choice",
+                    "incompatible_franchise",
+                    "returning_player",
+                    "can_pitch",
+                    "can_catch",
+                    "shirt_size",
+                    "registration_date"                    
+                ]
+                writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
 
-            writer.writeheader()
+                writer.writeheader()
+                
+                for p in player_sheet_list:
+                    writer.writerow(p)
+        
+        if mode == "franchises":
+            franchises = [ "BLUE", "FOREST", "MAROON", "NAVY", "none" ]
+            for franchise in franchises:
+                player_list = []
+                for player_object in player_sheet_list:
+                    if franchise == "none":
+                        if not player_object["first_franchise_choice"]:
+                            player_list.append(player_object) 
+                    elif player_object["first_franchise_choice"] == franchise:
+                        player_list.append(player_object)
             
-            for p in player_sheet_list:
-                writer.writerow(p)
+                player_list.sort(key=lambda x: x["date_of_birth"], reverse=True)
+
+                print(player_list)
+
+                csv_path = "/tmp/%s-players-%s.csv" % (franchise, nowdate.isoformat())
+
+                with open(csv_path, 'w', newline='') as csvfile:
+                    player_fieldnames = [
+                        "last_name",
+                        "first_name",
+                        "date_of_birth",
+                        "year_start_age",
+                        "age_exemption_requested",
+                        "first_franchise_choice",
+                        "second_franchise_choice",
+                        "incompatible_franchise",
+                        "returning_player",
+                        "can_pitch",
+                        "can_catch",
+                        "shirt_size",
+                        "registration_date",
+                        "family_name",                  
+                    ]
+                    writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
+                    writer.writeheader()
+
+                    for p in player_list:
+                        writer.writerow(p)
+                
+
+            
+
+    def add_arguments(self, parser):
+        parser.add_argument('operation', type=str, help='What kind of export', choices=['registered', 'unregistered', 'byfranchise'])
 
     def handle(self, *args, **options):
-        registered_families = Family.objects.filter(registration_submitted=True)
-        unregistered_families = Family.objects.filter(registration_submitted=False)
-        self.make_sheets(registered_families)
-        self.make_sheets(unregistered_families, "unregistered-")
+        if options['operation'] == 'registered':
+            registered_families = Family.objects.filter(registration_submitted=True)
+            self.make_sheets(registered_families)
+        if options['operation'] == 'unregistered':
+            unregistered_families = Family.objects.filter(registration_submitted=False)
+            self.make_sheets(unregistered_families, "unregistered-")
+        if options['operation'] == 'byfranchise':
+            registered_families = Family.objects.filter(registration_submitted=True)
+            self.make_sheets(registered_families, "", "franchises")
+
 
 
 
