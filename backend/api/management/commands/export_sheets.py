@@ -2,7 +2,10 @@ from django.core.management.base import BaseCommand, CommandError
 
 from api.models import Person, Family, Role, Player
 
+from api import util
+
 import pytz
+
 from datetime import date, datetime
 
 import csv
@@ -32,6 +35,12 @@ class Command(BaseCommand):
         #registered_families = Family.objects.filter(registration_submitted=True)
         families = family_set
         for family in families:
+            try:
+                family_persons = Person.objects.filter(family=family)
+                primary_person = family_persons.get(is_user=True)
+            except:
+                print("Family %s does not have a valid primary person" % family)
+                continue
             family_object = {}
             family_object["family_id"] = family.id
             family_object["family_name"] = family.family_name
@@ -47,11 +56,6 @@ class Command(BaseCommand):
             family_object["registration_date"] = reg_date_string
             family_object["payment_option"] = family.payment_option
             family_object["notes"] = family.notes
-        
-
-            family_persons = Person.objects.filter(family=family)
-
-            primary_person = family_persons.get(is_user=True)
 
             family_object["primary_email"] = primary_person.email
             family_object["primary_phone"] = primary_person.phone_primary
@@ -97,17 +101,32 @@ class Command(BaseCommand):
                 player_object["can_pitch"] = 'Y' if player.can_pitch == True else 'N'
                 player_object["can_catch"] = 'Y' if player.can_catch == True else 'N'
                 player_object["shirt_size"] = player.shirt_size
+                primary_parent = util.get_primary_parent(player.person)
+                if primary_parent:
+                    player_object["parent"] = "%s %s" % (primary_parent.first_name, primary_parent.last_name)
+                    player_object["parent email"] = primary_parent.email
+                    player_object["parent address"] = primary_parent.address
+                    player_object["parent phone"] = primary_parent.phone_primary
+                else:
+                    player_object["parent"] = ''
+                    player_object["parent email"] = ''
+                    player_object["parent address"] = ''
+                    player_object["parent phone"] = ''
+
                 player_sheet_list.append(player_object)
 
 
 
-        print(family_sheet_list)
+        #print(family_sheet_list)
 
-        print(player_sheet_list)
+        #print(player_sheet_list)
 
         nowdate = datetime.now()
 
         if mode == "summary":
+            print(family_sheet_list)
+            print(player_sheet_list)
+
             family_csv_path = "/tmp/%sfamily-%s.csv" % (prefix, nowdate.isoformat())
             player_csv_path = "/tmp/%splayer-%s.csv" % (prefix, nowdate.isoformat())
 
@@ -147,7 +166,11 @@ class Command(BaseCommand):
                     "can_pitch",
                     "can_catch",
                     "shirt_size",
-                    "registration_date"                    
+                    "registration_date",
+                    "parent",
+                    "parent phone",
+                    "parent email",
+                    "parent address"                         
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
 
@@ -188,7 +211,11 @@ class Command(BaseCommand):
                         "can_catch",
                         "shirt_size",
                         "registration_date",
-                        "family_name",                  
+                        "family_name",
+                        "parent",
+                        "parent phone",
+                        "parent email",
+                        "parent address"                  
                     ]
                     writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
                     writer.writeheader()
@@ -196,11 +223,60 @@ class Command(BaseCommand):
                     for p in player_list:
                         writer.writerow(p)
                 
+        if mode == "coaches":
+            franchises = [ "BLUE", "FOREST", "MAROON", "NAVY", "none"]
+            for franchise in franchises:
+                coach_list = []
+                for family in families:
+                    family_franchises = util.get_family_franchises(family)
+                    if (len(family_franchises) < 1 and franchise != 'none'):
+                        continue
+                    elif len(family_franchises) < 1 or family_franchises[0] != franchise:
+                        continue
+                    person_list = Person.objects.filter(family=family)
+                    for person in person_list:
+                        person_roles = Role.objects.filter(person=person)
+                        is_coach = False
+                        coach_role = ''
+                        for role in person_roles:
+                            if role.name in [ 'HEAD_COACH', 'ASSISTANT_COACH' ]:
+                                is_coach = True
+                                coach_role = role.name
+                                break
+                    
+                        if is_coach:
+                            person_object = {}
+                            person_object["first_name"] = person.first_name
+                            person_object["last_name"] = person.last_name
+                            person_object["email"] = person.email
+                            person_object["phone"] = person.phone_primary
+                            person_object['role'] = coach_role
+                            coach_list.append(person_object)
+                    
+
+                coach_list.sort(key=lambda x: x["last_name"])
+                
+                csv_path = "/tmp/%s-coaches-%s.csv" % (franchise, nowdate.isoformat())
+
+                with open(csv_path, 'w', newline='') as csvfile:
+                    coach_fieldnames = [
+                        "last_name",
+                        "first_name",
+                        'role',
+                        "email",
+                        "phone"
+                    ]
+
+                    writer = csv.DictWriter(csvfile, fieldnames=coach_fieldnames)
+                    writer.writeheader()
+
+                    for coach in coach_list:
+                        writer.writerow(coach)
 
             
 
     def add_arguments(self, parser):
-        parser.add_argument('operation', type=str, help='What kind of export', choices=['registered', 'unregistered', 'byfranchise'])
+        parser.add_argument('operation', type=str, help='What kind of export', choices=['registered', 'unregistered', 'byfranchise', 'coachlist'])
 
     def handle(self, *args, **options):
         if options['operation'] == 'registered':
@@ -212,7 +288,8 @@ class Command(BaseCommand):
         if options['operation'] == 'byfranchise':
             registered_families = Family.objects.filter(registration_submitted=True)
             self.make_sheets(registered_families, "", "franchises")
-
-
+        if options['operation'] == 'coachlist':
+            registered_families = Family.objects.filter(registration_submitted=True)
+            self.make_sheets(registered_families, "", "coaches")
 
 
