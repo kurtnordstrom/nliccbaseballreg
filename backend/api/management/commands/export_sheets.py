@@ -10,6 +10,8 @@ from datetime import date, datetime
 
 import csv
 
+import os
+
 
 class Command(BaseCommand):
     def makePersonListing(self, personList):
@@ -27,8 +29,23 @@ class Command(BaseCommand):
     def calculateAgeAtYearStart(self, birthDate):
         today = date.today()
         return today.year - birthDate.year - ((1, 1) < (birthDate.month, birthDate.day))    
+    
+    def find_franchise_file(self, franchise, file_list):
+        for file_name in file_list:
+            if file_name.startswith(franchise):
+                return file_name
+        return None
+    
+    def get_player_number(self, player_object, info_list):
+        for info_dict in info_list:
+            if info_dict["last_name"] == player_object["last_name"] \
+                and info_dict["first_name"] == player_object["first_name"] \
+                    and info_dict["date_of_birth"] == player_object["date_of_birth"]:
+                return info_dict["number"]
+        return None
 
-    def make_sheets(self, family_set, prefix="", mode="summary"):
+
+    def make_sheets(self, family_set, prefix="", mode="summary", franchise_dir=None):
         family_sheet_list = []
         player_sheet_list = []
 
@@ -182,12 +199,26 @@ class Command(BaseCommand):
         if mode == "franchises":
             franchises = [ "BLUE", "FOREST", "MAROON", "NAVY", "none" ]
             for franchise in franchises:
+                franchise_info_list = []
+                if franchise_dir:
+                    file_listings = os.listdir(franchise_dir)
+                    franchise_file = self.find_franchise_file(franchise.lower(), file_listings)
+                    if franchise_file:
+                        franchise_file_path = os.path.join(franchise_dir, franchise_file)
+                        if os.path.exists(franchise_file_path):
+                            with open(franchise_file_path) as franchise_csv:
+                                reader = csv.DictReader(franchise_csv)
+                                for row in reader:
+                                    franchise_info_list.append(row)
+
                 player_list = []
                 for player_object in player_sheet_list:
                     if franchise == "none":
                         if not player_object["first_franchise_choice"]:
                             player_list.append(player_object) 
                     elif player_object["first_franchise_choice"] == franchise:
+                        if len(franchise_info_list):
+                            player_object["number"] = self.get_player_number(player_object, franchise_info_list)
                         player_list.append(player_object)
             
                 player_list.sort(key=lambda x: x["date_of_birth"], reverse=True)
@@ -200,6 +231,7 @@ class Command(BaseCommand):
                     player_fieldnames = [
                         "last_name",
                         "first_name",
+                        "number",
                         "date_of_birth",
                         "year_start_age",
                         "age_exemption_requested",
@@ -217,6 +249,9 @@ class Command(BaseCommand):
                         "parent email",
                         "parent address"                  
                     ]
+                    if not len(franchise_info_list):
+                        player_fieldnames.remove("number")
+
                     writer = csv.DictWriter(csvfile, fieldnames=player_fieldnames)
                     writer.writeheader()
 
@@ -277,8 +312,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('operation', type=str, help='What kind of export', choices=['registered', 'unregistered', 'byfranchise', 'coachlist'])
+        parser.add_argument('--franchise_dir', type=str, help='Directory where static franchise csvs are', default=None)
 
     def handle(self, *args, **options):
+        franchise_dir=None
+        if options['franchise_dir']:
+            franchise_dir = os.path.abspath(options['franchise_dir'])
+
+
         if options['operation'] == 'registered':
             registered_families = Family.objects.filter(registration_submitted=True)
             self.make_sheets(registered_families)
@@ -287,7 +328,7 @@ class Command(BaseCommand):
             self.make_sheets(unregistered_families, "unregistered-")
         if options['operation'] == 'byfranchise':
             registered_families = Family.objects.filter(registration_submitted=True)
-            self.make_sheets(registered_families, "", "franchises")
+            self.make_sheets(registered_families, "", "franchises", franchise_dir)
         if options['operation'] == 'coachlist':
             registered_families = Family.objects.filter(registration_submitted=True)
             self.make_sheets(registered_families, "", "coaches")
